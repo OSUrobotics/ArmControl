@@ -1,9 +1,10 @@
 # Installation guidelines 
 Install as a package under src repository 
 
+```
 git init 
 git clone https://github.com/Greblovs/RobotArm.git master
-
+```
 # Usage 
 Firstly launch roscore 
 ```
