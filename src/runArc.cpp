@@ -8,6 +8,8 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <math.h> 
 #include <rosbag/bag.h>
+#include <iostream>
+#include <fstream>
 
 #define PI 3.14159265
 
@@ -22,9 +24,13 @@
 
 namespace rvt = rviz_visual_tools;
 
-class ArmControll{
-    private:
 
+// class for arm control and planning 
+
+class ArmControll{
+
+    // general valiables for moveit planning and rviz
+    private:
     std::string PLANNING_GROUP;
     moveit::planning_interface::PlanningSceneInterface scene;    
     const robot_state::JointModelGroup* joint_model_group; 
@@ -32,7 +38,7 @@ class ArmControll{
     moveit_visual_tools::MoveItVisualTools* visual_tools;
   
 
-
+    // initialize Rviz visualization 
     bool init_RViz(std::string link_name){
         this->visual_tools = new moveit_visual_tools::MoveItVisualTools(link_name);
         visual_tools->deleteAllMarkers();
@@ -42,23 +48,30 @@ class ArmControll{
 
     public:
 
+    // init all moveit vars for arm controll 
     ArmControll(std::string robot_name, std::string link_name){ 
         this->PLANNING_GROUP = robot_name;
         this->move_group = new moveit::planning_interface::MoveGroupInterface(PLANNING_GROUP);
         this->joint_model_group = this->move_group->getCurrentState()->getJointModelGroup(this->PLANNING_GROUP);
         init_RViz(link_name);
     }
+
+    // destructor 
     ~ArmControll(){
         delete move_group;
         delete visual_tools;
     }
 
+
+    // print message to Rviz 
     void printMessage(std::string text){
         Eigen::Isometry3d text_pose = Eigen::Isometry3d::Identity();
         text_pose.translation().z() = 1.5;
         this->visual_tools->publishText(text_pose, text, rvt::WHITE, rvt::XLARGE);
     }
 
+
+    // plan movement based on rotation and transition 
     void plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat){
         geometry_msgs::Pose target; 
         
@@ -82,30 +95,136 @@ class ArmControll{
         
     }
 
-
-    float plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool showAny = 0){
+    // plan movement using cartesian path comuting.
+    // points: points along which to construct path 
+    // execute: execute program on robot? 1 - yes, 0 no 
+    // showAny: show unsuccesfull trajectories in moveit? 1 - yes, 0 - no
+    float plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool execute = 0, bool showAny = 0){
         this->move_group->setMaxVelocityScalingFactor(1);
         moveit_msgs::RobotTrajectory tr; 
-        double jump_treshold = 2    ;
+        double jump_treshold = 2;
         double step = 0.01; 
         float result = this->move_group->computeCartesianPath(points, step, jump_treshold, tr);
         
         if (result == 1 || showAny){
             this->visual_tools->publishPath(points, rvt::LIME_GREEN, rvt::SMALL);
+            this->saveTrajectory(tr, "PathOut.txt");
             moveit::planning_interface::MoveGroupInterface::Plan my_plan;
             my_plan.trajectory_ = tr;
-            this->move_group->execute(my_plan);
+            
+
+            if (execute == 1){
+                this->move_group->execute(my_plan);
+            }
            
         }
         
         this->visual_tools->trigger();
-       
-        
-        
+    
         return result;
     }
 
+
+
+    // save trajectory to file 
+    void saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_name[20]){
+        std::ofstream f;
+        f.open(file_name, std::ofstream::trunc);
+       
+        f << "m:Path Info\n";
+        f << tr.joint_trajectory.joint_names.size();
+        f << "\n";
+        for (int i = 0; i < tr.joint_trajectory.joint_names.size(); i++){
+            f << tr.joint_trajectory.joint_names[i];
+            f << "\n";
+        }
+        f << tr.joint_trajectory.points.size();
+        f << "\n";
+        for (int i = 0; i < tr.joint_trajectory.points.size(); i++){
+            f << tr.joint_trajectory.points[i].positions.size();
+            f << "\n";
+            for (int j = 0; j< tr.joint_trajectory.points[i].positions.size(); j++){
+                f << tr.joint_trajectory.points[i].positions[j];
+                f << " ";
+            }
+            f << "\n";
+            f << tr.joint_trajectory.points[i].velocities.size();
+            f << "\n";
+            for (int j = 0; j< tr.joint_trajectory.points[i].velocities.size(); j++){
+                f << tr.joint_trajectory.points[i].velocities[j];
+                f << " ";
+            }
+            f << "\n";
+            f << tr.joint_trajectory.points[i].accelerations.size();
+            f << "\n";
+            for (int j = 0; j< tr.joint_trajectory.points[i].accelerations.size(); j++){
+                f << tr.joint_trajectory.points[i].accelerations[j];
+                f << " ";
+            }
+            f << "\n";
+            /*
+            f << "JointTrajectory:Effort\n";
+            for (int j = 0; j< tr.joint_trajectory.points[i].effort.size(); j++){
+                f << tr.joint_trajectory.points[i].effort[j];
+                f << " ";
+            }
+            */
+            f << "m:JointTrajectory:TimeFromStart\n";
+            f << tr.joint_trajectory.points[i].time_from_start; 
+            f << "\n";
+        }
+        
+
+        f.close();
+    }
+
+    // load trajectory from file
+     moveit_msgs::RobotTrajectory readTrajectory(){
+        moveit_msgs::RobotTrajectory tr; 
+        double holder; 
+        std::ifstream f("PathOut.txt");
+        std::string line;
+        getline (f,line);
+        int size; 
+        f >> size; 
+        getline(f, line);
+        for (int i = 0; i < size; i++){
+            getline(f, line);
+            tr.joint_trajectory.joint_names.push_back(line);
+        }
+        int numPoints;
+        f >> numPoints;
+        tr.joint_trajectory.points.resize(numPoints);
+        for (int i = 0; i < numPoints; i++){
+            f >> size;
+            for (int j= 0; j < size; j++){
+                f >> holder;
+                tr.joint_trajectory.points[i].positions.push_back(holder);
+            }
+            f >> size;
+            for (int j= 0; j < size; j++){
+                f >> holder;
+                tr.joint_trajectory.points[i].velocities.push_back(holder);
+            }
+            f >> size;
+            for (int j= 0; j < size; j++){
+                f >> holder;
+                tr.joint_trajectory.points[i].accelerations.push_back(holder);
+            }
+            getline(f, line);
+            getline(f, line);
+            f >> holder;
+            tr.joint_trajectory.points[i].time_from_start = (ros::Duration) holder; 
+           
+
+        }
+        f.close();
+        this->saveTrajectory(tr, "PathOut1.txt");
+        return tr; 
+    }
+
  
+    // print current coordinates of the arm 
     void print_current_pose_position(){
         geometry_msgs::Pose current; 
         current = this->move_group->getCurrentPose().pose;
@@ -116,6 +235,7 @@ class ArmControll{
         ROS_INFO("----------------------------------\n");
     }
 
+    // print current rotation of the arm (in quaternion xyzw)
     void print_current_pose_orientation(){
         geometry_msgs:: Pose current; 
         current = this->move_group->getCurrentPose().pose;
@@ -127,6 +247,7 @@ class ArmControll{
         ROS_INFO("----------------------------------\n");
     }
 
+    // return current pose 
     geometry_msgs::Pose getCurrentPose(){
         return this->move_group->getCurrentPose().pose; 
     }
@@ -166,9 +287,9 @@ class ArmControll{
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "Move_arc");
+    ros::init(argc, argv, "Arc");
     ros::NodeHandle node_handle;
-    ros::AsyncSpinner spinner(1);
+    ros::AsyncSpinner spinner(1);S
     spinner.start();
 
 
@@ -226,14 +347,13 @@ int main(int argc, char** argv)
 
     float result = 0; 
     int count = 0;
-    while (result != 1 || count == 10){ 
+    while (result != 1){ 
         
         result = control.plan_cartesian_path(points);
-
-        ROS_INFO_NAMED("Planning", "planned: %f", result);
+        ROS_INFO_NAMED("Planning", "Cound: %d  planned: %f", count, result);
         count ++; 
-
     }
-    
+
+    control.readTrajectory();
     
 }
