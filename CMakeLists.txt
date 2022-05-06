@@ -140,8 +140,8 @@ include_directories(
  
  
  
-  add_executable(runArc src/runArc.cpp)
-
+  add_executable(runArc src/Planner.cpp src/main.cpp)
+  add_executable(runState src/Planner.cpp src/goalState.cpp)
   
   
   
@@ -155,7 +155,7 @@ include_directories(
   include_directories(${EIGEN3_INCLUDE_DIR})
 
   target_link_libraries(runArc ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
+  target_link_libraries(runState ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
