@@ -1,20 +1,13 @@
 # include "Planner.h"
-
-
 /*
     Sergiy Greblov in 2022 
     Oregon State University 
 */
 
-
 // based on Moveit documentation: 
 // http://docs.ros.org/en/melodic/api/moveit_tutorials/html/doc/move_group_interface/move_group_interface_tutorial.html
 
 namespace rvt = rviz_visual_tools;
-
-
-// class for arm control and planning 
-
 
 
 // initialize Rviz visualization 
@@ -24,7 +17,6 @@ bool ArmControll:: init_RViz(std::string link_name){
     visual_tools->loadRemoteControl();
     return 0; 
 }
-
 
 
 // init all moveit vars for arm controll 
@@ -62,7 +54,6 @@ void ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat)
     target.position.x = x; 
     target.position.y = y; 
     target.position.z = z;    
-    
         
     this->move_group->setPoseTarget(target);
     this->move_group->setGoalTolerance(0.1);
@@ -99,10 +90,8 @@ float ArmControll:: plan_cartesian_path(std::vector<geometry_msgs::Pose> points,
     }
     
     this->visual_tools->trigger();
-
     return result;
 }
-
 
 
 // save trajectory to file 
@@ -152,8 +141,6 @@ void ArmControll:: saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_nam
         f << tr.joint_trajectory.points[i].time_from_start; 
         f << "\n";
     }
-    
-
     f.close();
 }
 
@@ -194,8 +181,6 @@ moveit_msgs::RobotTrajectory ArmControll:: readTrajectory(){
         getline(f, line);
         f >> holder;
         tr.joint_trajectory.points[i].time_from_start = (ros::Duration) holder; 
-        
-
     }
     f.close();
     this->saveTrajectory(tr, "PathOut1.txt");
@@ -253,8 +238,5 @@ void ArmControll:: publishSphere(){
     marker.color.r = 0.0;
     marker.color.g = 1.0;
     marker.color.b = 0.0;
-    
     vis_pub.publish(marker);
 }
-
-
