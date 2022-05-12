@@ -61,6 +61,7 @@ catkin_make
 ```
 roslaunch <name> (kinova_bringup) kinova_robot.launch kinova_robotType:=j2s7s300
 roslaunch j2s7s300_moveit_config j2s7s300_demo.launch 
+rosrun topic_tools replay /j2s7s300_driver/out/joint_state joint_states
 rosrun kinova_scripts <script_name>
 ```
 
