@@ -80,6 +80,8 @@ geometry_msgs::Pose ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Q
     this->visual_tools->publishTrajectoryLine(target_plan.trajectory_, this->joint_model_group);
     this->visual_tools->trigger();
     visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+
+    this->move_group->execute(target_plan);
     
     return target;
 }
@@ -116,7 +118,7 @@ float ArmControll:: plan_cartesian_path(std::vector<geometry_msgs::Pose> points,
 
 
 bool ArmControll:: validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold){
-    if (tr.joint_trajectory.points.size() > treshhold){
+    if (tr.joint_trajectory.points.size() > treshhold || tr.joint_trajectory.points.size() == 0){
         std::cout << "rejected with " << tr.joint_trajectory.points.size() << " points" << std::endl;
         return false; 
     }
@@ -333,7 +335,12 @@ void ArmControll:: closeGripper(geometry_msgs::Pose start_pose){
     this->visual_tools->publishTrajectoryLine(target_gripper_plan.trajectory_, this->joint_model_group_gripper);
     this->visual_tools->trigger();
     visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+    this->move_group_gripper->move();
 }
+
+
+
+
 
 void ArmControll:: openGripper(geometry_msgs::Pose start_pose){
     moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
@@ -343,8 +350,10 @@ void ArmControll:: openGripper(geometry_msgs::Pose start_pose){
     this->move_group_gripper->setGoalTolerance(0.01);
     this->move_group_gripper->setJointValueTarget(this->move_group_gripper->getNamedTargetValues("Open"));
     this->move_group_gripper->plan(target_gripper_plan);
+    
 
     this->visual_tools->publishTrajectoryLine(target_gripper_plan.trajectory_, this->joint_model_group_gripper);
     this->visual_tools->trigger();
     visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+    this->move_group_gripper->move();
 }

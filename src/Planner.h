@@ -45,6 +45,8 @@ class ArmControll{
         void publishSphere();
         void addColObject(std::string name, float x, float y, float z, float r, float l, float w, float h);
 
+
+      
         void deleteColObject(std::string name);
         void deleteAllObjects();
 
