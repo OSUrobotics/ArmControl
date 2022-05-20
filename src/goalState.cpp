@@ -39,5 +39,5 @@ int main(int argc, char** argv) {
     quat[2] = 0.68808;
     quat[3] = 0.086576;
 
-    control.plan_in_xyzw(c.position.x, c.position.y, c.position.z, quat);
+    control.plan_in_xyzw(c.position.x, c.position.y, c.position.z, quat, c);
 }

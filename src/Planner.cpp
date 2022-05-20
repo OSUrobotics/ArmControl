@@ -22,13 +22,18 @@ bool ArmControll:: init_RViz(std::string link_name){
 // init all moveit vars for arm controll 
 ArmControll:: ArmControll(std::string robot_name, std::string link_name){ 
     this->PLANNING_GROUP = robot_name;
+    this->PLANNING_GROUP_GRIPPER = "gripper";
     this->move_group = new moveit::planning_interface::MoveGroupInterface(PLANNING_GROUP);
+    this->move_group_gripper = new moveit::planning_interface::MoveGroupInterface(PLANNING_GROUP_GRIPPER);
     this->joint_model_group = this->move_group->getCurrentState()->getJointModelGroup(this->PLANNING_GROUP);
+    this->joint_model_group_gripper = this->move_group_gripper->getCurrentState()->getJointModelGroup(this->PLANNING_GROUP_GRIPPER);
+    this->planning_scene_interface = new moveit::planning_interface::PlanningSceneInterface();
     init_RViz(link_name);
 }
 
 // destructor 
 ArmControll:: ~ArmControll(){
+    delete planning_scene_interface;
     delete move_group;
     delete visual_tools;
 }
@@ -43,7 +48,12 @@ void ArmControll:: printMessage(std::string text){
 
 
 // plan movement based on rotation and transition 
-void ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat){
+geometry_msgs::Pose ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, int treshhold){
+    moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
+    start_state.setFromIK(joint_model_group, start_pose);
+    move_group->setStartState(start_state);
+    
+    
     geometry_msgs::Pose target; 
     
     target.orientation.w = quat[0]; 
@@ -56,13 +66,22 @@ void ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat)
     target.position.z = z;    
         
     this->move_group->setPoseTarget(target);
-    this->move_group->setGoalTolerance(0.1);
-    moveit::planning_interface::MoveGroupInterface::Plan target_plan; 
-    this->move_group->plan(target_plan);
+    this->move_group->setGoalTolerance(0.01);
+    moveit::planning_interface::MoveGroupInterface::Plan target_plan;
+
+    while (true){
+        this->move_group->plan(target_plan);
+        if (this->validatePlan(target_plan.trajectory_, treshhold)){
+            break;
+        }
+        
+    } 
+    
     this->visual_tools->publishTrajectoryLine(target_plan.trajectory_, this->joint_model_group);
     this->visual_tools->trigger();
     visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
     
+    return target;
 }
 
 // plan movement using cartesian path comuting.
@@ -91,6 +110,19 @@ float ArmControll:: plan_cartesian_path(std::vector<geometry_msgs::Pose> points,
     
     this->visual_tools->trigger();
     return result;
+}
+
+
+
+
+bool ArmControll:: validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold){
+    if (tr.joint_trajectory.points.size() > treshhold){
+        std::cout << "rejected with " << tr.joint_trajectory.points.size() << " points" << std::endl;
+        return false; 
+    }
+
+    return true;
+
 }
 
 
@@ -199,6 +231,7 @@ void ArmControll:: print_current_pose_position(){
     ROS_INFO("----------------------------------\n");
 }
 
+
 // print current rotation of the arm (in quaternion xyzw)
 void ArmControll:: print_current_pose_orientation(){
     geometry_msgs:: Pose current; 
@@ -214,6 +247,12 @@ void ArmControll:: print_current_pose_orientation(){
 // return current pose 
 geometry_msgs::Pose ArmControll:: getCurrentPose(){
     return this->move_group->getCurrentPose().pose; 
+}
+
+
+// return current pose 
+geometry_msgs::Pose ArmControll:: getCurrentPoseGripper(){
+    return this->move_group_gripper->getCurrentPose().pose; 
 }
 
 void ArmControll:: publishSphere(){
@@ -239,4 +278,73 @@ void ArmControll:: publishSphere(){
     marker.color.g = 1.0;
     marker.color.b = 0.0;
     vis_pub.publish(marker);
+}
+
+
+void ArmControll:: addColObject(std::string name, float x, float y, float z, float r, float l, float w, float h){
+    moveit_msgs::CollisionObject collision_object;
+    collision_object.header.frame_id = this->move_group->getPlanningFrame();  
+    collision_object.id = name;
+    shape_msgs::SolidPrimitive primitive;
+    primitive.type = primitive.BOX;
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0] = l;
+    primitive.dimensions[1] = w;
+    primitive.dimensions[2] = h;
+    geometry_msgs::Pose box_pose;
+    box_pose.orientation.w = r;
+    box_pose.position.x = x;
+    box_pose.position.y = y;
+    box_pose.position.z = z;
+
+    collision_object.primitives.push_back(primitive);
+    collision_object.primitive_poses.push_back(box_pose);
+    collision_object.operation = collision_object.ADD;
+
+    std::vector<moveit_msgs::CollisionObject> collision_objects;
+    collision_objects.push_back(collision_object);
+    this->collision_list.push_back(name);
+    this->planning_scene_interface->applyCollisionObjects(collision_objects);
+}
+
+
+void ArmControll:: deleteColObject(std::string name){
+    std::vector<std::string> temp;
+    temp.push_back(name); 
+    this->planning_scene_interface->removeCollisionObjects(temp);
+}
+
+void ArmControll:: deleteAllObjects(){
+    this->planning_scene_interface->removeCollisionObjects(this->collision_list);   
+}
+
+
+void ArmControll:: closeGripper(geometry_msgs::Pose start_pose){
+    moveit::planning_interface::MoveGroupInterface::Plan target_gripper_plan; 
+    moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
+    start_state.setFromIK(this->joint_model_group, start_pose);
+    move_group_gripper->setStartState(start_state);
+
+
+    this->move_group_gripper->setGoalTolerance(0.01);
+    this->move_group_gripper->setJointValueTarget(this->move_group_gripper->getNamedTargetValues("Close"));
+    this->move_group_gripper->plan(target_gripper_plan);
+
+    this->visual_tools->publishTrajectoryLine(target_gripper_plan.trajectory_, this->joint_model_group_gripper);
+    this->visual_tools->trigger();
+    visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+}
+
+void ArmControll:: openGripper(geometry_msgs::Pose start_pose){
+    moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
+    start_state.setFromIK(this->joint_model_group, start_pose);
+    move_group_gripper->setStartState(start_state);
+    moveit::planning_interface::MoveGroupInterface::Plan target_gripper_plan; 
+    this->move_group_gripper->setGoalTolerance(0.01);
+    this->move_group_gripper->setJointValueTarget(this->move_group_gripper->getNamedTargetValues("Open"));
+    this->move_group_gripper->plan(target_gripper_plan);
+
+    this->visual_tools->publishTrajectoryLine(target_gripper_plan.trajectory_, this->joint_model_group_gripper);
+    this->visual_tools->trigger();
+    visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
 }

@@ -142,11 +142,12 @@ include_directories(
  
   add_executable(runArc src/Planner.cpp src/main.cpp)
   add_executable(runState src/Planner.cpp src/goalState.cpp)
+  add_executable(runPathPlanning src/Planner.cpp src/driver.cpp)
   
   
   
   install(TARGETS runArc DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
+  install(TARGETS runPathPlanning DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
   install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
   find_package(Eigen3 REQUIRED) 
   find_package(catkin REQUIRED COMPONENTS rviz_visual_tools moveit_visual_tools roscpp moveit_ros_planning_interface)
@@ -156,6 +157,7 @@ include_directories(
 
   target_link_libraries(runArc ${catkin_LIBRARIES} ${Boost_LIBRARIES})
   target_link_libraries(runState ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+  target_link_libraries(runPathPlanning ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
