@@ -47,8 +47,39 @@ void ArmControll:: printMessage(std::string text){
 }
 
 
+bool ArmControll::comparePoses(geometry_msgs::Pose first, geometry_msgs::Pose second, int precision){
+    if(abs(first.position.x - second.position.x) > precision){
+        return false;
+    }
+    if(abs(first.position.y - second.position.y) > precision){
+        return false;
+    }
+    if(abs(first.position.z - second.position.z) > precision){
+        return false;
+    }
+    return true;
+}
+
+void ArmControll:: verifyExecution(geometry_msgs::Pose target, int precision, bool execute){
+    tf2::Quaternion quat;
+    quat[0] = target.orientation.x;
+    quat[1] = target.orientation.y;
+    quat[2] = target.orientation.z;
+    quat[3] = target.orientation.w;
+
+    
+    geometry_msgs::Pose current = this->getCurrentPose(); 
+    if (this->comparePoses(current, target, precision) == false){
+        std::cout << "executing correction" << std::endl;
+        this->plan_in_xyzw(target.position.x, target.position.y, target.position.z, quat, current, execute);
+    }
+    else{
+        std::cout << "No correction needed" << std::endl;
+    }
+}
+
 // plan movement based on rotation and transition 
-geometry_msgs::Pose ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, int treshhold){
+geometry_msgs::Pose ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, bool execute,  int treshhold){
     moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
     start_state.setFromIK(joint_model_group, start_pose);
     move_group->setStartState(start_state);
@@ -80,8 +111,11 @@ geometry_msgs::Pose ArmControll:: plan_in_xyzw(float x, float y, float z, tf2::Q
     this->visual_tools->publishTrajectoryLine(target_plan.trajectory_, this->joint_model_group);
     this->visual_tools->trigger();
     visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
-    
-    return target;
+    if (execute == 1){
+        this->move_group->execute(target_plan);
+    }
+    this->verifyExecution(target, 0.02, execute);
+    return this->getCurrentPose();
 }
 
 // plan movement using cartesian path comuting.
@@ -102,9 +136,7 @@ float ArmControll:: plan_cartesian_path(std::vector<geometry_msgs::Pose> points,
         my_plan.trajectory_ = tr;
         
 
-        if (execute == 1){
-            this->move_group->execute(my_plan);
-        }
+     
         
     }
     
@@ -255,17 +287,17 @@ geometry_msgs::Pose ArmControll:: getCurrentPoseGripper(){
     return this->move_group_gripper->getCurrentPose().pose; 
 }
 
-void ArmControll:: publishSphere(){
-    ros::NodeHandle node_handle;
-    ros::Publisher vis_pub = node_handle.advertise<visualization_msgs::Marker>( "visualization_marker", 0 );
+void ArmControll:: publishSphere(ros::NodeHandle &node_handle){
+    ros::Publisher vis_pub = node_handle.advertise<visualization_msgs::Marker>( "visualization_marker_array", 0 );
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "base_link";
-    marker.id = 0;
+    marker.header.frame_id = this->move_group->getPlanningFrame(); 
+    marker.id = 23;
+    marker.header.stamp = ros::Time::now();
     marker.type = visualization_msgs::Marker::SPHERE;
     marker.action = visualization_msgs::Marker::ADD;
-    marker.pose.position.x = 1;
-    marker.pose.position.y = 1;
-    marker.pose.position.z = 1;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;

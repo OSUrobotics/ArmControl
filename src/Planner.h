@@ -11,6 +11,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include <stdlib.h>
 
 
 # define PI 3.14159265
@@ -34,7 +37,7 @@ class ArmControll{
         ArmControll(std::string robot_name, std::string link_name);
         ~ArmControll();
         void printMessage(std::string text);
-        geometry_msgs::Pose plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose,  int treshhold = 20);
+        geometry_msgs::Pose plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose,  bool execute, int treshhold = 20);
         float plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool execute = 0, bool showAny = 0);
         void saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_name[20]); 
         moveit_msgs::RobotTrajectory readTrajectory();
@@ -42,15 +45,16 @@ class ArmControll{
         void print_current_pose_orientation();
         geometry_msgs::Pose getCurrentPose();
         geometry_msgs::Pose getCurrentPoseGripper();
-        void publishSphere();
+        void publishSphere(ros::NodeHandle &node_handle);
         void addColObject(std::string name, float x, float y, float z, float r, float l, float w, float h);
 
         void deleteColObject(std::string name);
         void deleteAllObjects();
 
+        bool comparePoses(geometry_msgs::Pose first, geometry_msgs::Pose second, int precision);
         void closeGripper( geometry_msgs::Pose start_pose);
         void openGripper( geometry_msgs::Pose start_pose);
-
+        void verifyExecution(geometry_msgs::Pose target, int precision, bool execute);
         bool validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold);
 
 };

@@ -21,8 +21,11 @@ int main(int argc, char** argv)
     control.addColObject("TopWall", 0.25, 0, 1.0, 1, 1.28, 1.18, 0.01);
 
 
+
+   
+
     tf2::Quaternion quat;
-    quat.setRPY(0, 0, 0*PI/180); 
+    quat.setRPY(0, 0, 0*PI/180);    
     geometry_msgs::Pose start = control.getCurrentPose();
   
     quat[0] = start.orientation.x;
@@ -35,12 +38,12 @@ int main(int argc, char** argv)
     //quat[2] = 0.68808;
     //quat[3] = 0.086576;
 
-    geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0, 0.2, quat, start);
+    geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0, 0.2, quat, start, 0);
 
-  
+    
    
 
-    geometry_msgs::Pose start2 = control.plan_in_xyzw(start1.position.x+0.2, start1.position.y, start1.position.z, quat, start1, 15);
+    geometry_msgs::Pose start2 = control.plan_in_xyzw(start1.position.x+0.2, start1.position.y, start1.position.z, quat, start1, 0 15);
     control.closeGripper(start2);
 
    
