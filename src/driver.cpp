@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     
    
 
-    geometry_msgs::Pose start2 = control.plan_in_xyzw(start1.position.x+0.2, start1.position.y, start1.position.z, quat, start1, 0 15);
+    geometry_msgs::Pose start2 = control.plan_in_xyzw(start1.position.x+0.2, start1.position.y, start1.position.z, quat, start1, 0, 15);
     control.closeGripper(start2);
 
    
