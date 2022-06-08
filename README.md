@@ -66,3 +66,37 @@ rosrun kinova_scripts <script_name>
 ```
 
 
+# Functionality and Tutorial 
+
+## Basic Usage 
+
+First, include library and create a class instance  
+
+```
+#include "Planner.h"
+
+ArmControl control("arm", "arm_link0"); 
+``` 
+
+You can execute basic path planning by using plan_in_xyzw method 
+Function takes several arguments: 
+  - [float] target x 
+  - [float] target y 
+  - [float] target z
+  - [tf2:Quaternion] target rotation as quaternion
+  - [geometry_msgs::Pose] current pose 
+  - [bool] execute on robot (1- yes, 0 - no)
+  - [int] max number of points in trajectory, to avoid invalid plans (20 is a good starting point) 
+  
+
+```
+geometry_msgs::Pose start = control.getCurrentPose();
+tf2::Quaternion quat;
+quat[1] = start.orientation.x;
+quat[2] = start.orientation.y;
+quat[3] = start.orientation.z;
+quat[0] = start.orientation.w;
+geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 1, 20);
+
+
+
