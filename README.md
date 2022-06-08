@@ -83,7 +83,7 @@ ArmControl control("arm", "arm_link0");
 ## Basic Path Planning 
 
 You can execute basic path planning by using plan_in_xyzw method  
-plan_in_xyzw
+### plan_in_xyzw
   - [float] target x 
   - [float] target y 
   - [float] target z
@@ -109,10 +109,10 @@ geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 
 ## Gripper 
 
 To close or open gripper use openGripper/closeGripper methods 
-openGripper 
+### openGripper 
   - [geometry_msgs::Pose] current pose 
 
-closeGripper 
+### closeGripper 
   - [geometry_msgs::Pose] current pose 
 
 ```
@@ -123,7 +123,7 @@ control.closeGripper(start1);
 
 While executing path planning, it is extremly important to add planning constraints  
 Use addColObject function to generate bounding boxes and other objects  
-addColObject
+### addColObject
   - [string] name (should be unique)
   - [float] position x 
   - [float] position y
@@ -148,7 +148,7 @@ control.addColObject("TopWall", 0.25, 0, 1.0, 1, 1.28, 1.18, 0.01);
 ## Plan cartesian_path 
 
  Cartesian path planning method works great for programming precise movements and complex trajectories  
- plan_cartesian_path
+ ### plan_cartesian_path
   - [std::vector<geometry_msgs::Pose>] path points 
   - [bool] execute on robot (1/0)
   - [bool] show display non-complete attempts (1/0)
