@@ -79,7 +79,7 @@ ArmControl control("arm", "arm_link0");
 ``` 
 
 You can execute basic path planning by using plan_in_xyzw method  
-plan_in_xyzw -> geometry_msgs::Pose] pose after function execution (!important, it may slightly vary from target pose)
+plan_in_xyzw
   - [float] target x 
   - [float] target y 
   - [float] target z
@@ -87,6 +87,9 @@ plan_in_xyzw -> geometry_msgs::Pose] pose after function execution (!important, 
   - [geometry_msgs::Pose] current pose 
   - [bool] execute on robot (1- yes, 0 - no)
   - [int] max number of points in trajectory, to avoid invalid plans (20 is a good starting point) 
+
+return 
+  - [geometry_msgs::Pose] pose after function execution (!important, it may slightly vary from target pose)
 
   
 
