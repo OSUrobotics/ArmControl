@@ -106,7 +106,7 @@ quat[3] = start.orientation.z;
 quat[0] = start.orientation.w;
 geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 1, 20);
 ```
-## Gippers 
+## Gripper 
 
 To close or open gripper use openGripper/closeGripper methods 
 openGripper 
@@ -125,13 +125,13 @@ While executing path planning, it is extremly important to add planning constrai
 Use addColObject function to generate bounding boxes and other objects  
 addColObject
   - [string] name (should be unique)
-  - position x 
-  - position y
-  - position z
-  - rotation (1 for 'vertical) 
-  - width 
-  - length 
-  - height 
+  - [float] position x 
+  - [float] position y
+  - [float] position z
+  - [float] rotation (1 for 'vertical) 
+  - [float] width 
+  - [float] length 
+  - [float] height 
 
 Here is a set of objects to execute path planning on the testbed  
 
@@ -144,6 +144,22 @@ control.addColObject("RightWall", 0.25, -0.6, 0.5, 1, 1.3, 0.01, 1);
 control.addColObject("Camera", 0.65, 0.0, 0.65 + 0.175, 1, 0.1, 0.1, 0.35);
 control.addColObject("TopWall", 0.25, 0, 1.0, 1, 1.28, 1.18, 0.01);
 ```
+
+## Plan cartesian_path 
+
+ Cartesian path planning method works great for programming precise movements and complex trajectories  
+ plan_cartesian_path
+  - [std::vector<geometry_msgs::Pose>] path points 
+  - [bool] execute on robot (1/0)
+  - [bool] show display non-complete attempts (1/0)
+return
+  - portion of the path planned, where 1 represents a successful attempt  
+
+
+
+
+
+
 
 
 
