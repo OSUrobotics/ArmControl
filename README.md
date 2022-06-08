@@ -68,7 +68,9 @@ rosrun kinova_scripts <script_name>
 
 # Functionality and Tutorial 
 
-## Basic Usage 
+This library is based on MoveIt package (https://ros-planning.github.io/moveit_tutorials/)
+
+## Setup
 
 First, include library and create a class instance  
 
@@ -77,6 +79,8 @@ First, include library and create a class instance
 
 ArmControl control("arm", "arm_link0"); 
 ``` 
+
+## Basic Path Planning 
 
 You can execute basic path planning by using plan_in_xyzw method  
 plan_in_xyzw
@@ -102,6 +106,7 @@ quat[3] = start.orientation.z;
 quat[0] = start.orientation.w;
 geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 1, 20);
 ```
+## Gippers 
 
 To close or open gripper use openGripper/closeGripper methods 
 openGripper 
@@ -113,6 +118,8 @@ closeGripper
 ```
 control.closeGripper(start1);
 ```
+
+## Collision Objects & planning constraints 
 
 While executing path planning, it is extremly important to add planning constraints  
 Use addColObject function to generate bounding boxes and other objects  
