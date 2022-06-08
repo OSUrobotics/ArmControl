@@ -78,7 +78,7 @@ First, include library and create a class instance
 ArmControl control("arm", "arm_link0"); 
 ``` 
 
-You can execute basic path planning by using plan_in_xyzw method 
+You can execute basic path planning by using plan_in_xyzw method  
 Function takes several arguments: 
   - [float] target x 
   - [float] target y 
@@ -97,6 +97,4 @@ quat[2] = start.orientation.y;
 quat[3] = start.orientation.z;
 quat[0] = start.orientation.w;
 geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 1, 20);
-
-
-
+```
