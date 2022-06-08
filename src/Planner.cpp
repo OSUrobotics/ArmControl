@@ -132,13 +132,20 @@ geometry_msgs::Pose ArmControll::plan_in_xyzw(float x, float y, float z, tf2::Qu
     this->move_group->setGoalTolerance(0.01);
     moveit::planning_interface::MoveGroupInterface::Plan target_plan;
 
+    int counter = 0;
     while (true)
     {
+        if (counter == 15)
+        {
+            counter = 0;
+            treshhold += 1;
+        }
         this->move_group->plan(target_plan);
         if (this->validatePlan(target_plan.trajectory_, treshhold))
         {
             break;
         }
+        counter += 1;
     }
 
     this->visual_tools->publishTrajectoryLine(target_plan.trajectory_, this->joint_model_group);
@@ -204,13 +211,13 @@ float ArmControll::plan_cartesian_path(std::vector<geometry_msgs::Pose> points, 
     this->move_group->setStartState(start_state);
     float result = this->move_group->computeCartesianPath(points, step, jump_treshold, tr);
 
-    if (result == 1 || showAny)
+    if (result >= 0.9 || showAny)
     {
         this->visual_tools->publishPath(points, rvt::LIME_GREEN, rvt::SMALL);
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
         my_plan.trajectory_ = tr;
 
-        if (execute == 1 && result == 1)
+        if (execute >= 0.9 && result == 1)
         {
             this->visual_tools->trigger();
             visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
@@ -225,7 +232,7 @@ bool ArmControll::validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold)
 {
     if (tr.joint_trajectory.points.size() > treshhold || tr.joint_trajectory.points.size() == 0)
     {
-        std::cout << "rejected with " << tr.joint_trajectory.points.size() << " points" << std::endl;
+        std::cout << treshhold << ", rejected with " << tr.joint_trajectory.points.size() << " points" << std::endl;
         return false;
     }
 
@@ -368,7 +375,7 @@ geometry_msgs::Pose ArmControll::getCurrentPose()
     return this->move_group->getCurrentPose().pose;
 }
 
-// return current pose
+// return current pose for Gripper
 geometry_msgs::Pose ArmControll::getCurrentPoseGripper()
 {
     return this->move_group_gripper->getCurrentPose().pose;

@@ -31,12 +31,11 @@ int main(int argc, char **argv)
     quat[3] = start.orientation.z;
     quat[0] = start.orientation.w;
 
-    geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0, 0.05, quat, start, 1);
+    geometry_msgs::Pose start1 = control.plan_in_xyzw(0.5, 0.02, 0.05, quat, start, 1, 18);
 
-
-    geometry_msgs::Pose start3 = control.plan_in_xyzw(start1.position.x + 0.15, start1.position.y, start1.position.z, quat, start1, 1, 15);
+    geometry_msgs::Pose start3 = control.plan_in_xyzw(start1.position.x + 0.12, start1.position.y, start1.position.z, quat, start1, 1, 10);
     control.closeGripper(start3);
-
-
+    geometry_msgs::Pose start4 = control.plan_in_xyzw(start1.position.x, start1.position.y, start1.position.z, quat, start3, 1, 10);
+    geometry_msgs::Pose start5 = control.plan_in_xyzw(start.position.x, start.position.y, start.position.z, quat, start4, 1, 20);
     control.deleteAllObjects();
 }
