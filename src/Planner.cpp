@@ -10,7 +10,7 @@
 namespace rvt = rviz_visual_tools;
 
 // initialize Rviz visualization
-bool ArmControll::init_RViz(std::string link_name)
+bool ArmControl::init_RViz(std::string link_name)
 {
     this->visual_tools = new moveit_visual_tools::MoveItVisualTools(link_name);
     visual_tools->deleteAllMarkers();
@@ -19,7 +19,7 @@ bool ArmControll::init_RViz(std::string link_name)
 }
 
 // init all moveit vars for arm controll
-ArmControll::ArmControll(std::string robot_name, std::string link_name)
+ArmControl::ArmControl(std::string robot_name, std::string link_name)
 {
     this->PLANNING_GROUP = robot_name;
     this->PLANNING_GROUP_GRIPPER = "gripper";
@@ -32,7 +32,7 @@ ArmControll::ArmControll(std::string robot_name, std::string link_name)
 }
 
 // destructor
-ArmControll::~ArmControll()
+ArmControl::~ArmControl()
 {
     delete planning_scene_interface;
     delete move_group;
@@ -40,14 +40,14 @@ ArmControll::~ArmControll()
 }
 
 // print message to Rviz
-void ArmControll::printMessage(std::string text)
+void ArmControl::printMessage(std::string text)
 {
     Eigen::Isometry3d text_pose = Eigen::Isometry3d::Identity();
     text_pose.translation().z() = 1.5;
     this->visual_tools->publishText(text_pose, text, rvt::WHITE, rvt::XLARGE);
 }
 
-bool ArmControll::comparePoses(geometry_msgs::Pose first, geometry_msgs::Pose second, float precision)
+bool ArmControl::comparePoses(geometry_msgs::Pose first, geometry_msgs::Pose second, float precision)
 {
     ROS_INFO("----------------------------------\n");
     ROS_INFO_NAMED("Current_Pose_Position", "x: %f", first.position.x);
@@ -81,7 +81,7 @@ bool ArmControll::comparePoses(geometry_msgs::Pose first, geometry_msgs::Pose se
     return true;
 }
 
-void ArmControll::verifyExecution(geometry_msgs::Pose target, float precision, bool execute)
+void ArmControl::verifyExecution(geometry_msgs::Pose target, float precision, bool execute)
 {
 
     geometry_msgs::Pose current = this->getCurrentPose();
@@ -111,7 +111,7 @@ void ArmControll::verifyExecution(geometry_msgs::Pose target, float precision, b
 }
 
 // plan movement based on rotation and transition
-geometry_msgs::Pose ArmControll::plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, bool execute, int treshhold)
+geometry_msgs::Pose ArmControl::plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, bool execute, int treshhold)
 {
     moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
     start_state.setFromIK(joint_model_group, start_pose);
@@ -166,7 +166,7 @@ geometry_msgs::Pose ArmControll::plan_in_xyzw(float x, float y, float z, tf2::Qu
 // execute: execute program on robot? 1 - yes, 0 no
 // showAny: show unsuccesfull trajectories in moveit? 1 - yes, 0 - no
 
-std::vector<geometry_msgs::Pose> ArmControll::computePoints(geometry_msgs::Pose start_pose, geometry_msgs::Pose end_pose, int numPoints)
+std::vector<geometry_msgs::Pose> ArmControl::computePoints(geometry_msgs::Pose start_pose, geometry_msgs::Pose end_pose, int numPoints)
 {
 
     ROS_INFO("----------------------------------\n");
@@ -200,7 +200,7 @@ std::vector<geometry_msgs::Pose> ArmControll::computePoints(geometry_msgs::Pose 
     return points;
 }
 
-float ArmControll::plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool execute, bool showAny)
+float ArmControl::plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool execute, bool showAny)
 {
     this->move_group->setMaxVelocityScalingFactor(1);
     moveit_msgs::RobotTrajectory tr;
@@ -228,7 +228,7 @@ float ArmControll::plan_cartesian_path(std::vector<geometry_msgs::Pose> points, 
     return result;
 }
 
-bool ArmControll::validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold)
+bool ArmControl::validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold)
 {
     if (tr.joint_trajectory.points.size() > treshhold || tr.joint_trajectory.points.size() == 0)
     {
@@ -240,7 +240,7 @@ bool ArmControll::validatePlan(moveit_msgs::RobotTrajectory tr, int treshhold)
 }
 
 // save trajectory to file
-void ArmControll::saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_name[20])
+void ArmControl::saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_name[20])
 {
     std::ofstream f;
     f.open(file_name, std::ofstream::trunc);
@@ -296,7 +296,7 @@ void ArmControll::saveTrajectory(moveit_msgs::RobotTrajectory tr, char file_name
 }
 
 // load trajectory from file
-moveit_msgs::RobotTrajectory ArmControll::readTrajectory()
+moveit_msgs::RobotTrajectory ArmControl::readTrajectory()
 {
     moveit_msgs::RobotTrajectory tr;
     double holder;
@@ -345,7 +345,7 @@ moveit_msgs::RobotTrajectory ArmControll::readTrajectory()
 }
 
 // print current coordinates of the arm
-void ArmControll::print_current_pose_position()
+void ArmControl::print_current_pose_position()
 {
     geometry_msgs::Pose current;
     current = this->move_group->getCurrentPose().pose;
@@ -357,7 +357,7 @@ void ArmControll::print_current_pose_position()
 }
 
 // print current rotation of the arm (in quaternion xyzw)
-void ArmControll::print_current_pose_orientation()
+void ArmControl::print_current_pose_orientation()
 {
     geometry_msgs::Pose current;
     current = this->move_group->getCurrentPose().pose;
@@ -370,18 +370,18 @@ void ArmControll::print_current_pose_orientation()
 }
 
 // return current pose
-geometry_msgs::Pose ArmControll::getCurrentPose()
+geometry_msgs::Pose ArmControl::getCurrentPose()
 {
     return this->move_group->getCurrentPose().pose;
 }
 
 // return current pose for Gripper
-geometry_msgs::Pose ArmControll::getCurrentPoseGripper()
+geometry_msgs::Pose ArmControl::getCurrentPoseGripper()
 {
     return this->move_group_gripper->getCurrentPose().pose;
 }
 
-void ArmControll::publishSphere(ros::NodeHandle &node_handle)
+void ArmControl::publishSphere(ros::NodeHandle &node_handle)
 {
     ros::Publisher vis_pub = node_handle.advertise<visualization_msgs::Marker>("visualization_marker_array", 0);
     visualization_msgs::Marker marker;
@@ -407,7 +407,7 @@ void ArmControll::publishSphere(ros::NodeHandle &node_handle)
     vis_pub.publish(marker);
 }
 
-void ArmControll::addColObject(std::string name, float x, float y, float z, float r, float l, float w, float h)
+void ArmControl::addColObject(std::string name, float x, float y, float z, float r, float l, float w, float h)
 {
     moveit_msgs::CollisionObject collision_object;
     collision_object.header.frame_id = this->move_group->getPlanningFrame();
@@ -434,19 +434,19 @@ void ArmControll::addColObject(std::string name, float x, float y, float z, floa
     this->planning_scene_interface->applyCollisionObjects(collision_objects);
 }
 
-void ArmControll::deleteColObject(std::string name)
+void ArmControl::deleteColObject(std::string name)
 {
     std::vector<std::string> temp;
     temp.push_back(name);
     this->planning_scene_interface->removeCollisionObjects(temp);
 }
 
-void ArmControll::deleteAllObjects()
+void ArmControl::deleteAllObjects()
 {
     this->planning_scene_interface->removeCollisionObjects(this->collision_list);
 }
 
-void ArmControll::closeGripper(geometry_msgs::Pose start_pose)
+void ArmControl::closeGripper(geometry_msgs::Pose start_pose)
 {
     moveit::planning_interface::MoveGroupInterface::Plan target_gripper_plan;
     moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
@@ -463,7 +463,7 @@ void ArmControll::closeGripper(geometry_msgs::Pose start_pose)
     this->move_group_gripper->move();
 }
 
-void ArmControll::openGripper(geometry_msgs::Pose start_pose)
+void ArmControl::openGripper(geometry_msgs::Pose start_pose)
 {
     moveit::core::RobotState start_state(*(this->move_group->getCurrentState()));
     start_state.setFromIK(this->joint_model_group, start_pose);

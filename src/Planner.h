@@ -17,7 +17,7 @@
 
 #define PI 3.14159265
 
-class ArmControll
+class ArmControl
 {
 private:
   std::vector<std::string> collision_list;
@@ -33,8 +33,8 @@ private:
   bool init_RViz(std::string link_name);
 
 public:
-  ArmControll(std::string robot_name, std::string link_name);
-  ~ArmControll();
+  ArmControl(std::string robot_name, std::string link_name);
+  ~ArmControl();
   void printMessage(std::string text);
   geometry_msgs::Pose plan_in_xyzw(float x, float y, float z, tf2::Quaternion quat, geometry_msgs::Pose start_pose, bool execute, int treshhold = 20);
   float plan_cartesian_path(std::vector<geometry_msgs::Pose> points, bool execute = 0, bool showAny = 0);

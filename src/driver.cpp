@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
     // setup arm joints and the scene
 
-    ArmControll control("arm", "arm_link0");
+    ArmControl control("arm", "arm_link0");
 
     control.addColObject("floor", 0.25, 0, -0.04, 1, 1.3, 1.2, 0.01);
     control.addColObject("FrontWall", 0.9, 0, 0.5, 1, 0.01, 1.2, 1);

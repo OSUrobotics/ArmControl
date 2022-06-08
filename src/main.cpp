@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
     // setup arm joints and the scene
 
-    ArmControll control("arm", "arm_link0");
+    ArmControl control("arm", "arm_link0");
     control.print_current_pose_position();
     control.print_current_pose_orientation();
 
