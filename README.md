@@ -114,3 +114,29 @@ closeGripper
 control.closeGripper(start1);
 ```
 
+While executing path planning, it is extremly important to add planning constraints  
+Use addColObject function to generate bounding boxes and other objects  
+addColObject
+  - [string] name (should be unique)
+  - position x 
+  - position y
+  - position z
+  - rotation (1 for 'vertical) 
+  - width 
+  - length 
+  - height 
+
+Here is a set of objects to execute path planning on the testbed  
+
+```
+control.addColObject("floor", 0.25, 0, -0.04, 1, 1.3, 1.2, 0.01);
+control.addColObject("FrontWall", 0.9, 0, 0.5, 1, 0.01, 1.2, 1);
+control.addColObject("BackWall", -0.4, 0, 0.5, 1, 0.01, 1.2, 1);
+control.addColObject("LeftWall", 0.25, 0.6, 0.5, 1, 1.3, 0.01, 1);
+control.addColObject("RightWall", 0.25, -0.6, 0.5, 1, 1.3, 0.01, 1);
+control.addColObject("Camera", 0.65, 0.0, 0.65 + 0.175, 1, 0.1, 0.1, 0.35);
+control.addColObject("TopWall", 0.25, 0, 1.0, 1, 1.28, 1.18, 0.01);
+```
+
+
+
